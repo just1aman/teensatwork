@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}All Users - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">All Users</h2>
+
+<div class="mb-3">
+    <a href="{{ url_for('admin.all_users') }}" class="btn btn-sm btn-{{ 'primary' if not role_filter else 'outline-primary' }}">All</a>
+    <a href="{{ url_for('admin.all_users', role='homeowner') }}" class="btn btn-sm btn-{{ 'primary' if role_filter == 'homeowner' else 'outline-primary' }}">Homeowners</a>
+    <a href="{{ url_for('admin.all_users', role='teen') }}" class="btn btn-sm btn-{{ 'primary' if role_filter == 'teen' else 'outline-primary' }}">Teens</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Registered</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.full_name }}</td>
+                <td>{{ user.username }}</td>
+                <td>
+                    <span class="badge bg-{{ 'info' if user.role == 'teen' else 'secondary' }}">
+                        {{ user.role | capitalize }}
+                    </span>
+                </td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.is_approved %}
+                        <span class="badge bg-success">Approved</span>
+                    {% elif user.is_rejected %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% else %}
+                        <span class="badge bg-warning">Pending</span>
+                    {% endif %}
+                </td>
+                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}" class="d-inline">
+                        {% if user.is_approved %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Suspend</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                        {% endif %}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

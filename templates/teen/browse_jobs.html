@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Browse Jobs - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Available Jobs</h2>
+
+<form method="GET" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <select class="form-select" name="category" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            {% for value, label in categories %}
+            <option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-5">
+        <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Search jobs...">
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+</form>
+
+{% if jobs.items %}
+<div class="row g-3">
+    {% for job in jobs.items %}
+    <div class="col-md-6">
+        <div class="card job-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h5 class="card-title">{{ job.title }}</h5>
+                    {% if job.id in my_interest_job_ids %}
+                    <span class="badge bg-info">Applied</span>
+                    {% endif %}
+                </div>
+                <span class="badge bg-secondary badge-category mb-2">{{ job.category_display }}</span>
+                <p class="card-text text-muted">{{ job.description[:120] }}{% if job.description|length > 120 %}...{% endif %}</p>
+                <p class="mb-1">
+                    <strong>${{ '%.2f' % job.hourly_rate }}</strong>/hr &middot;
+                    {{ job.estimated_hours }} hrs &middot;
+                    <strong>${{ '%.2f' % job.estimated_total }}</strong> est. total
+                </p>
+                <p class="text-muted mb-0"><small>Posted by {{ job.homeowner.full_name }} &middot; {{ job.created_at.strftime('%b %d, %Y') }}</small></p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('teen.job_detail', job_id=job.id) }}" class="btn btn-sm btn-primary">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if jobs.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if jobs.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('teen.browse_jobs', page=jobs.prev_num, category=category_filter, search=search) }}">Previous</a></li>
+        {% endif %}
+        {% for p in jobs.iter_pages() %}
+            {% if p %}
+            <li class="page-item {{ 'active' if p == jobs.page }}">
+                <a class="page-link" href="{{ url_for('teen.browse_jobs', page=p, category=category_filter, search=search) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+        {% if jobs.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('teen.browse_jobs', page=jobs.next_num, category=category_filter, search=search) }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info">No jobs available right now. Check back soon!</div>
+{% endif %}
+{% endblock %}

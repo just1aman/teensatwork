@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}All Chats - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">All Conversations</h2>
+
+{% if conversations %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Job</th>
+                <th>Homeowner</th>
+                <th>Teen</th>
+                <th>Messages</th>
+                <th>Started</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conv in conversations %}
+            <tr>
+                <td>{{ conv.job.title }}</td>
+                <td>{{ conv.homeowner.full_name }}</td>
+                <td>{{ conv.teen.full_name }}</td>
+                <td>{{ conv.messages | length }}</td>
+                <td>{{ conv.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('admin.view_chat', conversation_id=conv.id) }}" class="btn btn-sm btn-outline-primary">View Chat</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No conversations yet.</div>
+{% endif %}
+{% endblock %}

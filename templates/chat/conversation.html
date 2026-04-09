@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Chat - {{ conversation.job.title }} - TeensAtWork{% endblock %}
+
+{% block extra_head %}
+<style>
+    .chat-container { display: flex; flex-direction: column; }
+    .chat-input-area { position: sticky; bottom: 0; background: white; padding-top: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="mb-0">{{ conversation.job.title }}</h4>
+        <small class="text-muted">
+            {% if current_user.role == 'homeowner' %}
+                Chatting with {{ conversation.teen.full_name }}
+            {% elif current_user.role == 'teen' %}
+                Chatting with {{ conversation.homeowner.full_name }}
+            {% else %}
+                {{ conversation.homeowner.full_name }} &harr; {{ conversation.teen.full_name }}
+            {% endif %}
+        </small>
+    </div>
+    <a href="{{ url_for('chat.conversations') }}" class="btn btn-outline-secondary btn-sm">Back</a>
+</div>
+
+<div class="chat-container" id="chatMessages">
+    {% for msg in messages %}
+    <div class="d-flex {% if msg.sender_id == current_user.id %}justify-content-end{% endif %} mb-2">
+        <div class="message {% if msg.sender_id == current_user.id %}mine{% else %}theirs{% endif %}">
+            <div class="sender-name">{{ msg.sender.full_name }}</div>
+            {{ msg.body }}
+            <div class="message-time">{{ msg.created_at.strftime('%I:%M %p') }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if current_user.role != 'admin' %}
+<div class="chat-input-area mt-3">
+    <div class="input-group">
+        <input type="text" class="form-control" id="messageInput" placeholder="Type a message..."
+               onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+<script>
+    const conversationId = {{ conversation.id }};
+    const currentUserId = {{ current_user.id }};
+    const socket = io();
+
+    socket.on('connect', function() {
+        socket.emit('join', {conversation_id: conversationId});
+    });
+
+    socket.on('new_message', function(msg) {
+        appendMessage(msg);
+    });
+
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const body = input.value.trim();
+        if (!body) return;
+        socket.emit('send_message', {
+            conversation_id: conversationId,
+            body: body
+        });
+        input.value = '';
+    }
+
+    function appendMessage(msg) {
+        const container = document.getElementById('chatMessages');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-flex mb-2 ' + (msg.is_mine ? 'justify-content-end' : '');
+        wrapper.innerHTML = '<div class="message ' + (msg.is_mine ? 'mine' : 'theirs') + '">' +
+            '<div class="sender-name">' + escapeHtml(msg.sender_name) + '</div>' +
+            escapeHtml(msg.body) +
+            '<div class="message-time">' + msg.created_at + '</div>' +
+            '</div>';
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Auto-scroll on load
+    window.addEventListener('load', function() {
+        const container = document.getElementById('chatMessages');
+        container.scrollTop = container.scrollHeight;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Homeowner Dashboard - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Welcome, {{ current_user.full_name }}!</h2>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card border-success">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Open Jobs</h5>
+                <h2>{{ open_jobs }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Assigned Jobs</h5>
+                <h2>{{ assigned_jobs }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card border-warning">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Pending Applications</h5>
+                <h2>{{ pending_interests }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Recent Jobs</h4>
+    <a href="{{ url_for('homeowner.create_job') }}" class="btn btn-primary">Post New Job</a>
+</div>
+
+{% if recent_jobs %}
+<div class="list-group">
+    {% for job in recent_jobs %}
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <strong>{{ job.title }}</strong>
+            <span class="badge bg-secondary ms-2">{{ job.category_display }}</span>
+            <span class="badge bg-{{ 'success' if job.status == 'open' else 'primary' if job.status == 'assigned' else 'secondary' if job.status == 'completed' else 'danger' }} ms-1">
+                {{ job.status | capitalize }}
+            </span>
+        </div>
+        <div>
+            <span class="text-muted me-3">${{ '%.2f' % job.hourly_rate }}/hr</span>
+            <a href="{{ url_for('homeowner.job_applicants', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">
+                Applicants ({{ job.interests | length }})
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">You haven't posted any jobs yet. <a href="{{ url_for('homeowner.create_job') }}">Post your first job!</a></div>
+{% endif %}
+{% endblock %}

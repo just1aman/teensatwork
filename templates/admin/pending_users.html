@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Pending Users - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Pending User Approvals</h2>
+
+{% if users %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Email</th>
+                <th>Details</th>
+                <th>Registered</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.full_name }}</td>
+                <td>{{ user.username }}</td>
+                <td>
+                    <span class="badge bg-{{ 'info' if user.role == 'teen' else 'secondary' }}">
+                        {{ user.role | capitalize }}
+                    </span>
+                </td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.role == 'teen' %}
+                        Age: {{ user.age }}
+                        {% if user.parent_name %}<br>Parent: {{ user.parent_name }}{% endif %}
+                        {% if user.parent_phone %}<br>Parent Phone: {{ user.parent_phone }}{% endif %}
+                    {% elif user.role == 'homeowner' %}
+                        {% if user.address %}Address: {{ user.address }}{% endif %}
+                    {% endif %}
+                </td>
+                <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.approve_user', user_id=user.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.reject_user', user_id=user.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No pending users to review.</div>
+{% endif %}
+{% endblock %}

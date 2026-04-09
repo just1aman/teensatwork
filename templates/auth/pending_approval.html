@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Pending Approval - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm text-center">
+            <div class="card-body p-5">
+                <div class="mb-4" style="font-size: 4rem;">&#9203;</div>
+                <h3>Account Pending Approval</h3>
+                <p class="text-muted mt-3">
+                    Thank you for registering, <strong>{{ current_user.full_name }}</strong>!
+                    Your account is currently being reviewed by an administrator.
+                </p>
+                <p class="text-muted">
+                    You'll be able to access all features once your account is approved.
+                    Please check back shortly.
+                </p>
+                <a href="{{ url_for('auth.pending') }}" class="btn btn-outline-primary mt-3">Check Status</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary mt-3">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

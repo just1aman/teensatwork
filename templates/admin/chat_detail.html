@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Chat Detail - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Conversation</h2>
+        <p class="text-muted mb-0">
+            <strong>Job:</strong> {{ conversation.job.title }} |
+            <strong>Homeowner:</strong> {{ conversation.homeowner.full_name }} |
+            <strong>Teen:</strong> {{ conversation.teen.full_name }}
+        </p>
+    </div>
+    <a href="{{ url_for('admin.all_chats') }}" class="btn btn-outline-secondary">Back to Chats</a>
+</div>
+
+<div class="chat-container">
+    {% for msg in messages %}
+    <div class="d-flex {% if msg.sender_id == conversation.homeowner_id %}justify-content-end{% endif %} mb-2">
+        <div class="message {% if msg.sender_id == conversation.homeowner_id %}mine{% else %}theirs{% endif %}">
+            <div class="sender-name">{{ msg.sender.full_name }}</div>
+            {{ msg.body }}
+            <div class="message-time">{{ msg.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        </div>
+    </div>
+    {% endfor %}
+    {% if not messages %}
+    <p class="text-muted text-center">No messages in this conversation yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

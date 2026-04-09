@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Applicants - {{ job.title }} - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Applicants for "{{ job.title }}"</h2>
+        <p class="text-muted mb-0">
+            <span class="badge bg-secondary">{{ job.category_display }}</span>
+            ${{ '%.2f' % job.hourly_rate }}/hr &middot; {{ job.estimated_hours }} hrs
+            <span class="badge bg-{{ 'success' if job.status == 'open' else 'primary' if job.status == 'assigned' else 'secondary' }}">
+                {{ job.status | capitalize }}
+            </span>
+        </p>
+    </div>
+    <a href="{{ url_for('homeowner.my_jobs') }}" class="btn btn-outline-secondary">Back to Jobs</a>
+</div>
+
+{% if interests %}
+<div class="row g-3">
+    {% for interest in interests %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h5>{{ interest.teen.full_name }}</h5>
+                    <span class="badge bg-{{ 'warning' if interest.status == 'pending' else 'success' if interest.status == 'accepted' else 'danger' }}">
+                        {{ interest.status | capitalize }}
+                    </span>
+                </div>
+                <p class="text-muted mb-1">Age: {{ interest.teen.age }} &middot; Applied: {{ interest.created_at.strftime('%Y-%m-%d') }}</p>
+                {% if interest.message %}
+                <div class="bg-light p-2 rounded mt-2 mb-2">
+                    <small class="text-muted">Message:</small><br>
+                    {{ interest.message }}
+                </div>
+                {% endif %}
+                {% if interest.status == 'pending' %}
+                <div class="mt-2">
+                    <form method="POST" action="{{ url_for('homeowner.accept_teen', job_id=job.id, teen_id=interest.teen_id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('homeowner.reject_teen', job_id=job.id, teen_id=interest.teen_id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                    </form>
+                </div>
+                {% elif interest.status == 'accepted' %}
+                <a href="{{ url_for('chat.conversations') }}" class="btn btn-sm btn-outline-primary mt-2">Chat</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">No one has expressed interest in this job yet.</div>
+{% endif %}
+{% endblock %}

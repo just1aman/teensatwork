@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}All Jobs - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">All Jobs</h2>
+
+<div class="mb-3">
+    <a href="{{ url_for('admin.all_jobs') }}" class="btn btn-sm btn-{{ 'primary' if not status_filter else 'outline-primary' }}">All</a>
+    <a href="{{ url_for('admin.all_jobs', status='open') }}" class="btn btn-sm btn-{{ 'primary' if status_filter == 'open' else 'outline-primary' }}">Open</a>
+    <a href="{{ url_for('admin.all_jobs', status='assigned') }}" class="btn btn-sm btn-{{ 'primary' if status_filter == 'assigned' else 'outline-primary' }}">Assigned</a>
+    <a href="{{ url_for('admin.all_jobs', status='completed') }}" class="btn btn-sm btn-{{ 'primary' if status_filter == 'completed' else 'outline-primary' }}">Completed</a>
+    <a href="{{ url_for('admin.all_jobs', status='cancelled') }}" class="btn btn-sm btn-{{ 'primary' if status_filter == 'cancelled' else 'outline-primary' }}">Cancelled</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Homeowner</th>
+                <th>Rate</th>
+                <th>Hours</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Posted</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td>{{ job.title }}</td>
+                <td><span class="badge bg-secondary">{{ job.category_display }}</span></td>
+                <td>{{ job.homeowner.full_name }}</td>
+                <td>${{ '%.2f' % job.hourly_rate }}/hr</td>
+                <td>{{ job.estimated_hours }}</td>
+                <td>${{ '%.2f' % job.estimated_total }}</td>
+                <td>
+                    <span class="badge bg-{{ 'success' if job.status == 'open' else 'primary' if job.status == 'assigned' else 'secondary' if job.status == 'completed' else 'danger' }}">
+                        {{ job.status | capitalize }}
+                    </span>
+                </td>
+                <td>{{ job.assigned_teen.full_name if job.assigned_teen else '-' }}</td>
+                <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

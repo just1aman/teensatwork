@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}My Jobs - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Jobs</h2>
+    <a href="{{ url_for('homeowner.create_job') }}" class="btn btn-primary">Post New Job</a>
+</div>
+
+{% if jobs %}
+<div class="row g-3">
+    {% for job in jobs %}
+    <div class="col-md-6">
+        <div class="card job-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h5 class="card-title">{{ job.title }}</h5>
+                    <span class="badge bg-{{ 'success' if job.status == 'open' else 'primary' if job.status == 'assigned' else 'secondary' if job.status == 'completed' else 'danger' }}">
+                        {{ job.status | capitalize }}
+                    </span>
+                </div>
+                <span class="badge bg-secondary badge-category mb-2">{{ job.category_display }}</span>
+                <p class="card-text text-muted">{{ job.description[:100] }}{% if job.description|length > 100 %}...{% endif %}</p>
+                <p class="mb-1"><strong>${{ '%.2f' % job.hourly_rate }}</strong>/hr &middot; {{ job.estimated_hours }} hrs &middot; <strong>${{ '%.2f' % job.estimated_total }}</strong> total</p>
+                {% if job.assigned_teen %}
+                <p class="mb-1 text-success">Assigned to: {{ job.assigned_teen.full_name }}</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('homeowner.job_applicants', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">
+                    Applicants ({{ job.interests | length }})
+                </a>
+                {% if job.status == 'open' %}
+                <a href="{{ url_for('homeowner.edit_job', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <form method="POST" action="{{ url_for('homeowner.cancel_job', job_id=job.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this job?')">Cancel</button>
+                </form>
+                {% elif job.status == 'assigned' %}
+                <form method="POST" action="{{ url_for('homeowner.complete_job', job_id=job.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-success">Mark Complete</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">You haven't posted any jobs yet. <a href="{{ url_for('homeowner.create_job') }}">Post your first job!</a></div>
+{% endif %}
+{% endblock %}

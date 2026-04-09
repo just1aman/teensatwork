@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Messages - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">My Conversations</h2>
+
+{% if conversations %}
+<div class="list-group">
+    {% for conv in conversations %}
+    <a href="{{ url_for('chat.conversation', conversation_id=conv.id) }}" class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-1">{{ conv.job.title }}</h6>
+                <p class="mb-0 text-muted">
+                    {% if current_user.role == 'homeowner' %}
+                        Chat with: <strong>{{ conv.teen.full_name }}</strong>
+                    {% elif current_user.role == 'teen' %}
+                        Chat with: <strong>{{ conv.homeowner.full_name }}</strong>
+                    {% else %}
+                        {{ conv.homeowner.full_name }} &harr; {{ conv.teen.full_name }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="text-end">
+                <small class="text-muted">{{ conv.messages | length }} messages</small>
+                {% if conv.messages %}
+                <br><small class="text-muted">Last: {{ conv.messages[-1].created_at.strftime('%b %d, %I:%M %p') }}</small>
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    No conversations yet.
+    {% if current_user.role == 'homeowner' %}
+    Accept a teen's application to start chatting!
+    {% elif current_user.role == 'teen' %}
+    Apply to jobs and get accepted to start chatting with homeowners!
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

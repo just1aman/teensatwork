@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <a href="{{ url_for('teen.browse_jobs') }}" class="btn btn-outline-secondary btn-sm mb-3">Back to Jobs</a>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2>{{ job.title }}</h2>
+                        <span class="badge bg-secondary">{{ job.category_display }}</span>
+                        <span class="badge bg-{{ 'success' if job.status == 'open' else 'primary' }}">{{ job.status | capitalize }}</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Hourly Rate</h6>
+                        <h4>${{ '%.2f' % job.hourly_rate }}</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Estimated Hours</h6>
+                        <h4>{{ job.estimated_hours }}</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Estimated Total</h6>
+                        <h4>${{ '%.2f' % job.estimated_total }}</h4>
+                    </div>
+                </div>
+
+                <h5>Description</h5>
+                <p>{{ job.description }}</p>
+
+                <p class="text-muted">
+                    Posted by <strong>{{ job.homeowner.full_name }}</strong> on {{ job.created_at.strftime('%B %d, %Y') }}
+                </p>
+
+                <hr>
+
+                {% if existing_interest %}
+                    <div class="alert alert-{{ 'warning' if existing_interest.status == 'pending' else 'success' if existing_interest.status == 'accepted' else 'danger' }}">
+                        <strong>Your application status: {{ existing_interest.status | capitalize }}</strong>
+                        {% if existing_interest.status == 'accepted' %}
+                        <br>Congratulations! <a href="{{ url_for('chat.conversations') }}">Chat with the homeowner</a>.
+                        {% elif existing_interest.status == 'pending' %}
+                        <br>The homeowner will review your application soon.
+                        {% endif %}
+                    </div>
+                {% elif job.status == 'open' %}
+                    <form method="POST" action="{{ url_for('teen.show_interest', job_id=job.id) }}">
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Introduce yourself (optional)</label>
+                            <textarea class="form-control" id="message" name="message" rows="3"
+                                      placeholder="Tell the homeowner why you'd be great for this job..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">I'm Interested!</button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-secondary">This job is no longer accepting applications.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Admin Dashboard</h2>
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card stats-card border-warning">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Pending Approvals</h5>
+                <h2>{{ pending_count }}</h2>
+                <a href="{{ url_for('admin.pending_users') }}" class="btn btn-sm btn-outline-warning mt-2">Review</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Total Users</h5>
+                <h2>{{ total_users }}</h2>
+                <a href="{{ url_for('admin.all_users') }}" class="btn btn-sm btn-outline-primary mt-2">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card border-success">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Active Jobs</h5>
+                <h2>{{ active_jobs }}</h2>
+                <a href="{{ url_for('admin.all_jobs') }}" class="btn btn-sm btn-outline-success mt-2">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card border-info">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Conversations</h5>
+                <h2>{{ total_conversations }}</h2>
+                <a href="{{ url_for('admin.all_chats') }}" class="btn btn-sm btn-outline-info mt-2">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
