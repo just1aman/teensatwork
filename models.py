@@ -21,8 +21,9 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # 'homeowner', 'teen', 'admin'
+    password_hash = db.Column(db.String(256), nullable=True)  # nullable for Google OAuth users
+    role = db.Column(db.String(20), nullable=True)  # 'homeowner', 'teen', 'admin' — null until profile completed
+    google_id = db.Column(db.String(256), unique=True, nullable=True)
     is_approved = db.Column(db.Boolean, default=False)
     is_rejected = db.Column(db.Boolean, default=False)
     full_name = db.Column(db.String(120), nullable=False)

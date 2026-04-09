@@ -1,10 +1,13 @@
+import os
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_socketio import SocketIO
+from authlib.integrations.flask_client import OAuth
 from models import db, User
 
 login_manager = LoginManager()
 socketio = SocketIO()
+oauth = OAuth()
 
 
 def create_app():
@@ -13,11 +16,24 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///teensatwork.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    # Google OAuth config — set these env vars before running
+    app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
+    app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'warning'
     socketio.init_app(app)
+
+    oauth.init_app(app)
+    oauth.register(
+        name='google',
+        client_id=app.config['GOOGLE_CLIENT_ID'],
+        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'},
+    )
 
     @login_manager.user_loader
     def load_user(user_id):

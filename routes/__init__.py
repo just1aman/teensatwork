@@ -9,6 +9,8 @@ def role_required(*roles):
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
                 return redirect(url_for('auth.login'))
+            if not current_user.role:
+                return redirect(url_for('auth.complete_profile'))
             if current_user.role not in roles:
                 abort(403)
             if not current_user.is_approved and current_user.role != 'admin':
