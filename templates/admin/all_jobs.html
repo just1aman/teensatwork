@@ -24,6 +24,7 @@
                 <th>Total</th>
                 <th>Status</th>
                 <th>Assigned To</th>
+                <th>Scheduled</th>
                 <th>Posted</th>
             </tr>
         </thead>
@@ -42,6 +43,7 @@
                     </span>
                 </td>
                 <td>{{ job.assigned_teen.full_name if job.assigned_teen else '-' }}</td>
+                <td>{{ job.scheduled_start.strftime('%Y-%m-%d %H:%M') if job.scheduled_start else '-' }}</td>
                 <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
             </tr>
             {% endfor %}

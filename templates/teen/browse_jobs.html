@@ -40,6 +40,9 @@
                     {{ job.estimated_hours }} hrs &middot;
                     <strong>${{ '%.2f' % job.estimated_total }}</strong> est. total
                 </p>
+                {% if job.scheduled_start %}
+                <p class="mb-1 text-primary"><small>&#128197; {{ job.scheduled_start.strftime('%b %d at %I:%M %p') }}</small></p>
+                {% endif %}
                 <p class="text-muted mb-0"><small>Posted by {{ job.homeowner.full_name }} &middot; {{ job.created_at.strftime('%b %d, %Y') }}</small></p>
             </div>
             <div class="card-footer bg-transparent">

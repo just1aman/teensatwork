@@ -36,8 +36,16 @@
                                    min="0.5" step="0.5" value="{{ job.estimated_hours }}" required oninput="updateTotal()">
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label for="scheduled_start" class="form-label">Scheduled Start Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="scheduled_start"
+                               name="scheduled_start"
+                               value="{{ job.scheduled_start.strftime('%Y-%m-%dT%H:%M') if job.scheduled_start else '' }}">
+                    </div>
                     <div class="alert alert-light border">
-                        <strong>Estimated Total: </strong><span id="estimated-total">${{ '%.2f' % job.estimated_total }}</span>
+                        <div><strong>Job Cost: </strong><span id="job-cost">${{ '%.2f' % job.estimated_total }}</span></div>
+                        <div><small class="text-muted">Platform + insurance fee (10%): <span id="platform-fee">${{ '%.2f' % job.platform_fee }}</span></small></div>
+                        <div class="mt-1"><strong>Total: </strong><span id="estimated-total" class="text-primary fw-bold">${{ '%.2f' % job.total_with_fee }}</span></div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Update Job</button>
                 </form>
@@ -52,7 +60,11 @@
 function updateTotal() {
     const rate = parseFloat(document.getElementById('hourly_rate').value) || 0;
     const hours = parseFloat(document.getElementById('estimated_hours').value) || 0;
-    document.getElementById('estimated-total').textContent = '$' + (rate * hours).toFixed(2);
+    const jobCost = rate * hours;
+    const fee = jobCost * 0.10;
+    document.getElementById('job-cost').textContent = '$' + jobCost.toFixed(2);
+    document.getElementById('platform-fee').textContent = '$' + fee.toFixed(2);
+    document.getElementById('estimated-total').textContent = '$' + (jobCost + fee).toFixed(2);
 }
 </script>
 {% endblock %}

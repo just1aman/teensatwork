@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Job Timer - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-3">Job Timer</h2>
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1">{{ job.title }}</h4>
+                        <span class="badge bg-secondary">{{ job.category_display }}</span>
+                        <span class="badge bg-{{ 'warning' if session.status == 'pending' else 'success' if session.status == 'in_progress' else 'secondary' }}">
+                            {{ session.status.replace('_', ' ') | capitalize }}
+                        </span>
+                    </div>
+                    <div class="text-end">
+                        <div class="small text-muted">Hourly rate</div>
+                        <h4 class="mb-0">${{ '%.2f' % job.hourly_rate }}</h4>
+                    </div>
+                </div>
+
+                <hr>
+
+                {% if session.status == 'pending' %}
+                <div class="alert alert-info">
+                    {% if current_user.role == 'teen' %}
+                    Waiting for homeowner to scan your QR code to start the timer.
+                    <a href="{{ url_for('session.teen_qr', job_id=job.id) }}" class="btn btn-sm btn-primary mt-2">Show QR Code</a>
+                    {% else %}
+                    Work hasn't started yet. Scan the teen's QR code when they arrive.
+                    <a href="{{ url_for('session.scanner') }}" class="btn btn-sm btn-primary mt-2">Open Scanner</a>
+                    {% endif %}
+                </div>
+
+                {% elif session.status == 'in_progress' %}
+                <div class="text-center my-4">
+                    <div class="text-muted small">Elapsed Time</div>
+                    <h1 id="timer" style="font-size: 4rem; font-family: monospace;">00:00:00</h1>
+                    <div class="text-muted">Earning: <span id="earning" class="fw-bold">$0.00</span></div>
+                </div>
+                {% if current_user.role == 'homeowner' %}
+                <div class="text-center">
+                    <a href="{{ url_for('session.scanner') }}" class="btn btn-danger btn-lg">Scan QR to End Job</a>
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <a href="{{ url_for('session.teen_qr', job_id=job.id) }}" class="btn btn-primary btn-lg">Show QR to Homeowner</a>
+                </div>
+                {% endif %}
+
+                {% elif session.status == 'completed' %}
+                <div class="alert alert-success text-center">
+                    <h3>&#9989; Job Completed!</h3>
+                    <p><strong>Actual hours worked:</strong> {{ session.actual_hours }} hrs</p>
+                    <p><strong>Final amount:</strong> ${{ '%.2f' % session.final_amount }}</p>
+                    <p class="small text-muted mb-0">
+                        Started: {{ session.started_at.strftime('%I:%M %p') }} &middot;
+                        Ended: {{ session.ended_at.strftime('%I:%M %p') }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if session.status == 'in_progress' %}
+<script>
+    const startedAt = new Date('{{ session.started_at.isoformat() }}Z');
+    const hourlyRate = {{ job.hourly_rate }};
+
+    function updateTimer() {
+        const now = new Date();
+        const secs = Math.floor((now - startedAt) / 1000);
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        const s = secs % 60;
+        document.getElementById('timer').textContent =
+            String(h).padStart(2, '0') + ':' +
+            String(m).padStart(2, '0') + ':' +
+            String(s).padStart(2, '0');
+        const hoursWorked = secs / 3600;
+        document.getElementById('earning').textContent = '$' + (hoursWorked * hourlyRate).toFixed(2);
+    }
+    updateTimer();
+    setInterval(updateTimer, 1000);
+
+    // Poll every 10s to detect status changes (e.g., homeowner ended job on their phone)
+    setInterval(function() {
+        fetch('{{ url_for("session.elapsed_json", job_id=job.id) }}')
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'completed') window.location.reload();
+            });
+    }, 10000);
+</script>
+{% endif %}
+{% endblock %}

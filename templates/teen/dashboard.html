@@ -39,6 +39,10 @@
             <strong>{{ interest.job.title }}</strong>
             <span class="badge bg-secondary ms-2">{{ interest.job.category_display }}</span>
             <br><small class="text-muted">${{ '%.2f' % interest.job.hourly_rate }}/hr &middot; {{ interest.job.estimated_hours }} hrs</small>
+            {% if interest.status == 'accepted' %}
+            <br>
+            <a href="{{ url_for('session.teen_qr', job_id=interest.job_id) }}" class="btn btn-sm btn-primary mt-1" onclick="event.stopPropagation();">Show Check-In QR</a>
+            {% endif %}
         </div>
         <span class="badge bg-{{ 'warning' if interest.status == 'pending' else 'success' if interest.status == 'accepted' else 'danger' }}">
             {{ interest.status | capitalize }}

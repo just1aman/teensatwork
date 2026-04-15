@@ -1,24 +1,22 @@
 import os
+from dotenv import load_dotenv
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_socketio import SocketIO
 from authlib.integrations.flask_client import OAuth
 from models import db, User
 
+load_dotenv()
+
 login_manager = LoginManager()
 socketio = SocketIO()
-oauth = OAuth()
 
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'change-this-to-a-real-secret-key'
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-this-to-a-real-secret-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///teensatwork.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    # Google OAuth config — set these env vars before running
-    app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
-    app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -26,14 +24,16 @@ def create_app():
     login_manager.login_message_category = 'warning'
     socketio.init_app(app)
 
-    oauth.init_app(app)
+    # Google OAuth — create and register directly on the app
+    oauth = OAuth(app)
     oauth.register(
         name='google',
-        client_id=app.config['GOOGLE_CLIENT_ID'],
-        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        client_id=os.environ.get('GOOGLE_CLIENT_ID', ''),
+        client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', ''),
         server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
         client_kwargs={'scope': 'openid email profile'},
     )
+    app.oauth = oauth  # store on app so routes can access it
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -44,12 +44,16 @@ def create_app():
     from routes.teen import teen_bp
     from routes.admin import admin_bp
     from routes.chat import chat_bp, register_socketio_events
+    from routes.payment import payment_bp
+    from routes.session import session_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(homeowner_bp, url_prefix='/homeowner')
     app.register_blueprint(teen_bp, url_prefix='/teen')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(chat_bp, url_prefix='/chat')
+    app.register_blueprint(payment_bp, url_prefix='/payment')
+    app.register_blueprint(session_bp, url_prefix='/session')
 
     register_socketio_events(socketio)
 

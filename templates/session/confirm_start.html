@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Start Job - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 text-center">
+                <div style="font-size: 3rem;">&#128205;</div>
+                <h3>Start Work Timer?</h3>
+                <p class="text-muted">You've scanned {{ job.assigned_teen.full_name }}'s QR code for:</p>
+                <h5>{{ job.title }}</h5>
+                <p class="text-muted small">${{ '%.2f' % job.hourly_rate }}/hr &middot; estimated {{ job.estimated_hours }} hrs</p>
+
+                <hr>
+
+                <div class="alert alert-warning">
+                    <strong>Important:</strong> Starting the timer means work has begun. You'll scan this QR code again to stop the timer when the job is done.
+                </div>
+
+                <form method="POST" action="{{ url_for('session.start_session', token=session.token) }}">
+                    <button type="submit" class="btn btn-success btn-lg">&#9654; Start Work Timer</button>
+                    <a href="{{ url_for('homeowner.my_jobs') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

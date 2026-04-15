@@ -41,8 +41,16 @@
                                    oninput="updateTotal()">
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label for="scheduled_start" class="form-label">Scheduled Start Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="scheduled_start"
+                               name="scheduled_start" required>
+                        <small class="text-muted">Homeowners can cancel free up to 24 hours before this time.</small>
+                    </div>
                     <div class="alert alert-light border" id="total-display">
-                        <strong>Estimated Total: </strong><span id="estimated-total">$0.00</span>
+                        <div><strong>Job Cost: </strong><span id="job-cost">$0.00</span></div>
+                        <div><small class="text-muted">Platform + insurance fee (10%): <span id="platform-fee">$0.00</span></small></div>
+                        <div class="mt-1"><strong>Total You Pay: </strong><span id="estimated-total" class="text-primary fw-bold">$0.00</span></div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Post Job</button>
                 </form>
@@ -57,7 +65,11 @@
 function updateTotal() {
     const rate = parseFloat(document.getElementById('hourly_rate').value) || 0;
     const hours = parseFloat(document.getElementById('estimated_hours').value) || 0;
-    document.getElementById('estimated-total').textContent = '$' + (rate * hours).toFixed(2);
+    const jobCost = rate * hours;
+    const fee = jobCost * 0.10;
+    document.getElementById('job-cost').textContent = '$' + jobCost.toFixed(2);
+    document.getElementById('platform-fee').textContent = '$' + fee.toFixed(2);
+    document.getElementById('estimated-total').textContent = '$' + (jobCost + fee).toFixed(2);
 }
 </script>
 {% endblock %}

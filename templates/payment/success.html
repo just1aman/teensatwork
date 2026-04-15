@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Payment Successful - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-5 text-center">
+                <div style="font-size: 4rem;">&#9989;</div>
+                <h2 class="mt-3">Payment Successful!</h2>
+                <p class="text-muted">You've been charged and the teen has been notified.</p>
+
+                <hr>
+                <div class="text-start">
+                    <p><strong>Job:</strong> {{ job.title }}</p>
+                    {% if job.scheduled_start %}
+                    <p><strong>Scheduled:</strong> {{ job.scheduled_start.strftime('%A, %B %d, %Y at %I:%M %p') }}</p>
+                    {% endif %}
+                    <p><strong>Job cost:</strong> ${{ '%.2f' % (payment.amount_job / 100) }}</p>
+                    <p><strong>Platform &amp; insurance fee:</strong> ${{ '%.2f' % (payment.amount_fee / 100) }}</p>
+                    <p class="fw-bold"><strong>Total paid:</strong> ${{ '%.2f' % (payment.amount_total / 100) }}</p>
+                    <p class="text-muted small">Payment status: <span class="badge bg-success">{{ payment.status | capitalize }}</span></p>
+                </div>
+
+                <div class="mt-4 d-flex gap-2 justify-content-center">
+                    <a href="{{ url_for('chat.conversations') }}" class="btn btn-primary">Message the Teen</a>
+                    <a href="{{ url_for('homeowner.my_jobs') }}" class="btn btn-outline-secondary">Back to My Jobs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

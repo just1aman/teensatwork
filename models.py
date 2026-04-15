@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -50,7 +51,12 @@ class Job(db.Model):
     estimated_hours = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default='open')  # open, assigned, completed, cancelled
     assigned_teen_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    scheduled_start = db.Column(db.DateTime, nullable=True)  # when the job is scheduled to begin
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    cancelled_at = db.Column(db.DateTime, nullable=True)
+    cancellation_reason = db.Column(db.String(200), nullable=True)
+    cancellation_fee = db.Column(db.Float, nullable=True)  # 10% of total if within 24hr, else 0
+    refund_amount = db.Column(db.Float, nullable=True)  # amount refunded to homeowner (simulated)
 
     assigned_teen = db.relationship('User', foreign_keys=[assigned_teen_id])
     interests = db.relationship('JobInterest', backref='job', lazy=True)
@@ -58,6 +64,26 @@ class Job(db.Model):
     @property
     def estimated_total(self):
         return self.hourly_rate * self.estimated_hours
+
+    @property
+    def platform_fee(self):
+        return self.estimated_total * 0.10  # 10% platform/insurance fee
+
+    @property
+    def total_with_fee(self):
+        return self.estimated_total + self.platform_fee
+
+    @property
+    def hours_until_start(self):
+        if not self.scheduled_start:
+            return None
+        delta = self.scheduled_start - datetime.utcnow()
+        return delta.total_seconds() / 3600
+
+    @property
+    def can_cancel_free(self):
+        hours = self.hours_until_start
+        return hours is not None and hours > 24
 
     @property
     def category_display(self):
@@ -90,6 +116,72 @@ class Conversation(db.Model):
     job = db.relationship('Job')
     messages = db.relationship('Message', backref='conversation', lazy=True,
                                order_by='Message.created_at')
+
+
+class JobSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False, unique=True)
+    token = db.Column(db.String(64), unique=True, nullable=False,
+                      default=lambda: secrets.token_urlsafe(32))
+
+    # Timestamps
+    started_at = db.Column(db.DateTime, nullable=True)
+    ended_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Scan verification (homeowner scans QR shown by teen)
+    start_scan_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    end_scan_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    # Final reconciliation
+    actual_hours = db.Column(db.Float, nullable=True)
+    final_amount = db.Column(db.Float, nullable=True)  # actual_hours * hourly_rate
+
+    status = db.Column(db.String(20), default='pending')  # pending, in_progress, completed
+
+    job = db.relationship('Job', backref=db.backref('session', uselist=False))
+
+    @property
+    def elapsed_seconds(self):
+        if not self.started_at:
+            return 0
+        end = self.ended_at or datetime.utcnow()
+        return (end - self.started_at).total_seconds()
+
+    @property
+    def elapsed_hours(self):
+        return self.elapsed_seconds / 3600
+
+
+class Payment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    homeowner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    teen_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    # Amounts in cents (Stripe convention)
+    amount_total = db.Column(db.Integer, nullable=False)  # job cost + 10% fee
+    amount_job = db.Column(db.Integer, nullable=False)    # base job cost
+    amount_fee = db.Column(db.Integer, nullable=False)    # 10% platform/insurance fee
+    amount_refunded = db.Column(db.Integer, default=0)    # cumulative refunded
+    amount_payout = db.Column(db.Integer, default=0)      # paid out to teen (simulated in Phase B)
+
+    # Stripe IDs
+    stripe_checkout_session_id = db.Column(db.String(200), nullable=True)
+    stripe_payment_intent_id = db.Column(db.String(200), nullable=True)
+    stripe_charge_id = db.Column(db.String(200), nullable=True)
+    stripe_refund_id = db.Column(db.String(200), nullable=True)
+
+    # Status: pending (checkout created), paid (captured), refunded, partial_refund, failed
+    status = db.Column(db.String(30), default='pending')
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    paid_at = db.Column(db.DateTime, nullable=True)
+    refunded_at = db.Column(db.DateTime, nullable=True)
+
+    job = db.relationship('Job', backref='payments')
+    homeowner = db.relationship('User', foreign_keys=[homeowner_id])
+    teen = db.relationship('User', foreign_keys=[teen_id])
 
 
 class Message(db.Model):

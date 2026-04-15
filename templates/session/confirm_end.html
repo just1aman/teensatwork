@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}End Job - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 text-center">
+                <div style="font-size: 3rem;">&#127937;</div>
+                <h3>End Work Timer?</h3>
+                <p class="text-muted">This will stop the timer and finalize the job.</p>
+                <h5>{{ job.title }}</h5>
+
+                <hr>
+
+                <div class="alert alert-info">
+                    <div><strong>Started at:</strong> {{ session.started_at.strftime('%I:%M %p') }}</div>
+                    <div><strong>Elapsed (approx):</strong> <span id="elapsed-display">calculating...</span></div>
+                </div>
+
+                <form method="POST" action="{{ url_for('session.end_session', token=session.token) }}">
+                    <button type="submit" class="btn btn-danger btn-lg">&#9632; End &amp; Complete Job</button>
+                    <a href="{{ url_for('session.view', job_id=job.id) }}" class="btn btn-outline-secondary btn-lg">Keep Running</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const startedAt = new Date('{{ session.started_at.isoformat() }}Z');
+    function updateElapsed() {
+        const now = new Date();
+        const secs = Math.floor((now - startedAt) / 1000);
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        const s = secs % 60;
+        document.getElementById('elapsed-display').textContent =
+            String(h).padStart(2, '0') + ':' +
+            String(m).padStart(2, '0') + ':' +
+            String(s).padStart(2, '0');
+    }
+    updateElapsed();
+    setInterval(updateElapsed, 1000);
+</script>
+{% endblock %}

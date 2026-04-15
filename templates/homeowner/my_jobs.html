@@ -21,24 +21,34 @@
                 </div>
                 <span class="badge bg-secondary badge-category mb-2">{{ job.category_display }}</span>
                 <p class="card-text text-muted">{{ job.description[:100] }}{% if job.description|length > 100 %}...{% endif %}</p>
-                <p class="mb-1"><strong>${{ '%.2f' % job.hourly_rate }}</strong>/hr &middot; {{ job.estimated_hours }} hrs &middot; <strong>${{ '%.2f' % job.estimated_total }}</strong> total</p>
+                <p class="mb-1"><strong>${{ '%.2f' % job.hourly_rate }}</strong>/hr &middot; {{ job.estimated_hours }} hrs &middot; <strong>${{ '%.2f' % job.total_with_fee }}</strong> total (incl. 10% fee)</p>
+                {% if job.scheduled_start %}
+                <p class="mb-1 text-muted"><small>&#128197; {{ job.scheduled_start.strftime('%b %d, %Y at %I:%M %p') }}</small></p>
+                {% endif %}
                 {% if job.assigned_teen %}
                 <p class="mb-1 text-success">Assigned to: {{ job.assigned_teen.full_name }}</p>
+                {% endif %}
+                {% if job.status == 'cancelled' and job.cancellation_fee is not none %}
+                <p class="mb-1 small text-danger">Cancelled. Fee: ${{ '%.2f' % job.cancellation_fee }}. Refund: ${{ '%.2f' % job.refund_amount }}</p>
+                {% endif %}
+                {% set paid_payment = job.payments | selectattr('status', 'equalto', 'paid') | first %}
+                {% if paid_payment %}
+                <p class="mb-1 small text-success">&#128176; Paid: ${{ '%.2f' % (paid_payment.amount_total / 100) }}</p>
                 {% endif %}
             </div>
             <div class="card-footer bg-transparent">
                 <a href="{{ url_for('homeowner.job_applicants', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">
                     Applicants ({{ job.interests | length }})
                 </a>
+                {% if job.status in ('open', 'assigned') %}
                 {% if job.status == 'open' %}
                 <a href="{{ url_for('homeowner.edit_job', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                <form method="POST" action="{{ url_for('homeowner.cancel_job', job_id=job.id) }}" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this job?')">Cancel</button>
-                </form>
-                {% elif job.status == 'assigned' %}
-                <form method="POST" action="{{ url_for('homeowner.complete_job', job_id=job.id) }}" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-success">Mark Complete</button>
-                </form>
+                {% endif %}
+                <a href="{{ url_for('homeowner.cancel_job', job_id=job.id) }}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                {% endif %}
+                {% if job.status in ('assigned', 'in_progress') %}
+                <a href="{{ url_for('session.view', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">Timer</a>
+                <a href="{{ url_for('session.scanner') }}" class="btn btn-sm btn-primary">Scan QR</a>
                 {% endif %}
             </div>
         </div>

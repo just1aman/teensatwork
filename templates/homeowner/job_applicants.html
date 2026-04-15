@@ -38,7 +38,7 @@
                 {% if interest.status == 'pending' %}
                 <div class="mt-2">
                     <form method="POST" action="{{ url_for('homeowner.accept_teen', job_id=job.id, teen_id=interest.teen_id) }}" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                        <button type="submit" class="btn btn-sm btn-success">Accept &amp; Pay (${{ '%.2f' % job.total_with_fee }})</button>
                     </form>
                     <form method="POST" action="{{ url_for('homeowner.reject_teen', job_id=job.id, teen_id=interest.teen_id) }}" class="d-inline">
                         <button type="submit" class="btn btn-sm btn-danger">Reject</button>

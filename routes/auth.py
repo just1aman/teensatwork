@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
@@ -63,7 +63,7 @@ def register():
         user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password),
+            password_hash=generate_password_hash(password, method='pbkdf2:sha256'),
             role=role,
             full_name=full_name,
             phone=phone or None,
@@ -147,14 +147,14 @@ def pending():
 
 @auth_bp.route('/login/google')
 def google_login():
-    from app import oauth
+    oauth = current_app.oauth
     redirect_uri = url_for('auth.google_callback', _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
 
 @auth_bp.route('/login/google/callback')
 def google_callback():
-    from app import oauth
+    oauth = current_app.oauth
     token = oauth.google.authorize_access_token()
     userinfo = token.get('userinfo')
     if not userinfo:

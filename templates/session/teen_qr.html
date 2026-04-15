@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Your Job QR Code - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h2 class="mb-3">Your Job Check-In Code</h2>
+        <div class="card shadow-sm">
+            <div class="card-body p-4 text-center">
+                <h5>{{ job.title }}</h5>
+                <p class="text-muted">
+                    <span class="badge bg-secondary">{{ job.category_display }}</span>
+                    {% if job.scheduled_start %}
+                    &middot; {{ job.scheduled_start.strftime('%b %d at %I:%M %p') }}
+                    {% endif %}
+                </p>
+
+                {% if session.status == 'pending' %}
+                <div class="alert alert-info">
+                    <strong>When you arrive at the homeowner's house</strong>, show them this QR code on your phone. They will scan it to start the work timer.
+                </div>
+                <img src="{{ url_for('session.qr_image', token=session.token) }}" class="img-fluid" style="max-width: 300px;" alt="QR Code">
+
+                {% elif session.status == 'in_progress' %}
+                <div class="alert alert-success">
+                    <h5>&#9203; Work Timer Running</h5>
+                    <p class="mb-0">Started at {{ session.started_at.strftime('%I:%M %p') }}</p>
+                </div>
+                <img src="{{ url_for('session.qr_image', token=session.token) }}" class="img-fluid" style="max-width: 300px;" alt="QR Code">
+                <p class="text-muted mt-3">When the job is done, show this QR code again to the homeowner so they can end the timer.</p>
+                <a href="{{ url_for('session.view', job_id=job.id) }}" class="btn btn-primary">View Live Timer</a>
+
+                {% elif session.status == 'completed' %}
+                <div class="alert alert-success">
+                    <h5>&#9989; Job Completed!</h5>
+                    <p class="mb-0">Actual hours: {{ session.actual_hours }} &middot; Final amount: ${{ '%.2f' % session.final_amount }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
