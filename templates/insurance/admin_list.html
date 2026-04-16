@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Insurance Policies - TeensAtWork{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Insurance Policies</h2>
+
+{% if policies %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Certificate ID</th>
+                <th>Provider</th>
+                <th>Job</th>
+                <th>Teen</th>
+                <th>Coverage</th>
+                <th>Premium</th>
+                <th>Status</th>
+                <th>Issued</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in policies %}
+            <tr>
+                <td><code>{{ p.certificate_id }}</code></td>
+                <td>
+                    <span class="badge bg-{{ 'secondary' if p.provider == 'mock' else 'primary' }}">
+                        {{ p.provider | capitalize }}
+                    </span>
+                </td>
+                <td>{{ p.job.title }}</td>
+                <td>{{ p.job.assigned_teen.full_name if p.job.assigned_teen else '-' }}</td>
+                <td>${{ '%.2f' % p.coverage_amount }}</td>
+                <td>${{ '%.2f' % p.premium_paid }}</td>
+                <td>
+                    <span class="badge bg-{{ 'success' if p.status == 'active' else 'secondary' if p.status == 'expired' else 'danger' }}">
+                        {{ p.status | capitalize }}
+                    </span>
+                </td>
+                <td>{{ p.issued_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('insurance.view_certificate', certificate_id=p.certificate_id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No insurance policies issued yet.</div>
+{% endif %}
+{% endblock %}

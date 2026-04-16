@@ -153,6 +153,35 @@ class JobSession(db.Model):
         return self.elapsed_seconds / 3600
 
 
+class InsurancePolicy(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey('job_session.id'), nullable=False)
+
+    # Provider info — in production, this would be Thimble data
+    provider = db.Column(db.String(50), default='mock')  # 'mock' now, 'thimble' later
+    certificate_id = db.Column(db.String(100), unique=True, nullable=False)
+
+    # Coverage
+    coverage_type = db.Column(db.String(50), default='occupational_accident')
+    coverage_amount = db.Column(db.Float, default=10000.00)  # $10k default
+    premium_paid = db.Column(db.Float, default=0.0)  # portion of 10% fee allocated to insurance
+
+    # Lifecycle
+    issued_at = db.Column(db.DateTime, default=datetime.utcnow)
+    coverage_starts_at = db.Column(db.DateTime, nullable=False)
+    coverage_ends_at = db.Column(db.DateTime, nullable=True)
+
+    # Status: active, expired, cancelled, claim_filed
+    status = db.Column(db.String(20), default='active')
+
+    # Raw response for debugging / audit (in production: real Thimble response)
+    provider_response_json = db.Column(db.Text, nullable=True)
+
+    job = db.relationship('Job', backref='insurance_policies')
+    session = db.relationship('JobSession', backref='insurance_policies')
+
+
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)

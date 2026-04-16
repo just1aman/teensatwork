@@ -35,6 +35,16 @@
                 </div>
 
                 {% elif session.status == 'in_progress' %}
+                {% set active_policy = session.insurance_policies | selectattr('status', 'equalto', 'active') | first %}
+                {% if active_policy %}
+                <div class="alert alert-success d-flex align-items-center justify-content-between">
+                    <div>
+                        <strong>&#128737; Insurance Coverage Active</strong><br>
+                        <small>Certificate #{{ active_policy.certificate_id }} &middot; ${{ '%.0f' % active_policy.coverage_amount }} coverage</small>
+                    </div>
+                    <a href="{{ url_for('insurance.view_certificate', certificate_id=active_policy.certificate_id) }}" class="btn btn-sm btn-outline-success">View Certificate</a>
+                </div>
+                {% endif %}
                 <div class="text-center my-4">
                     <div class="text-muted small">Elapsed Time</div>
                     <h1 id="timer" style="font-size: 4rem; font-family: monospace;">00:00:00</h1>
@@ -60,6 +70,12 @@
                         Ended: {{ session.ended_at.strftime('%I:%M %p') }}
                     </p>
                 </div>
+                {% set completed_policy = session.insurance_policies | first %}
+                {% if completed_policy %}
+                <div class="text-center">
+                    <a href="{{ url_for('insurance.view_certificate', certificate_id=completed_policy.certificate_id) }}" class="btn btn-outline-secondary">View Insurance Certificate</a>
+                </div>
+                {% endif %}
                 {% endif %}
             </div>
         </div>

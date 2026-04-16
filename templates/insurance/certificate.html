@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Certificate {{ policy.certificate_id }} - TeensAtWork{% endblock %}
+
+{% block extra_head %}
+<style>
+    .certificate {
+        background: linear-gradient(135deg, #fefce8 0%, #fff 100%);
+        border: 4px double #7c3aed;
+        border-radius: 1rem;
+        padding: 3rem 2rem;
+        box-shadow: 0 10px 40px rgba(124, 58, 237, 0.15);
+        position: relative;
+    }
+    .cert-seal {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: var(--taw-gradient);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+        line-height: 1.1;
+        transform: rotate(-15deg);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .cert-header {
+        text-align: center;
+        border-bottom: 2px solid #ede9fe;
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .cert-field {
+        margin: 0.8rem 0;
+    }
+    .cert-field .label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6b7280;
+        font-weight: 600;
+    }
+    .cert-field .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e1b4b;
+    }
+    .mock-banner {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #78350f;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        {% if policy.provider == 'mock' %}
+        <div class="mock-banner">
+            <strong>&#9888; DEVELOPMENT / DEMO</strong> — This is a simulated certificate. Not legally binding. Real policies will be issued via a licensed provider once platform is live.
+        </div>
+        {% endif %}
+
+        <div class="certificate">
+            <div class="cert-seal">
+                TEENS AT WORK<br>VERIFIED<br>COVERAGE
+            </div>
+
+            <div class="cert-header">
+                <div style="font-size: 0.9rem; color: #6b7280; letter-spacing: 3px;">CERTIFICATE OF INSURANCE</div>
+                <h1 style="font-family: Georgia, serif; color: #5b21b6; margin-top: 0.5rem;">Occupational Accident Coverage</h1>
+                <div class="text-muted">Certificate #{{ policy.certificate_id }}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="cert-field">
+                        <div class="label">Insured Worker</div>
+                        <div class="value">{{ job.assigned_teen.full_name if job.assigned_teen else 'N/A' }}</div>
+                    </div>
+                    <div class="cert-field">
+                        <div class="label">Job Location / Homeowner</div>
+                        <div class="value">{{ job.homeowner.full_name }}</div>
+                    </div>
+                    <div class="cert-field">
+                        <div class="label">Job Description</div>
+                        <div class="value">{{ job.title }}</div>
+                        <div class="small text-muted">{{ job.category_display }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cert-field">
+                        <div class="label">Coverage Amount</div>
+                        <div class="value">${{ '%.2f' % policy.coverage_amount }}</div>
+                    </div>
+                    <div class="cert-field">
+                        <div class="label">Coverage Type</div>
+                        <div class="value">{{ policy.coverage_type.replace('_', ' ') | title }}</div>
+                    </div>
+                    <div class="cert-field">
+                        <div class="label">Status</div>
+                        <div class="value">
+                            <span class="badge bg-{{ 'success' if policy.status == 'active' else 'secondary' }}">
+                                {{ policy.status | capitalize }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="cert-field">
+                        <div class="label">Coverage Starts</div>
+                        <div class="value">{{ policy.coverage_starts_at.strftime('%b %d, %Y at %I:%M %p UTC') }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cert-field">
+                        <div class="label">Coverage Ends</div>
+                        <div class="value">
+                            {% if policy.coverage_ends_at %}
+                                {{ policy.coverage_ends_at.strftime('%b %d, %Y at %I:%M %p UTC') }}
+                            {% else %}
+                                Upon job completion
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="text-center">
+                <div class="cert-field">
+                    <div class="label">Issued By</div>
+                    <div class="value">TeensAtWork Platform{% if policy.provider != 'mock' %} via {{ policy.provider | capitalize }}{% endif %}</div>
+                    <div class="small text-muted">Issued: {{ policy.issued_at.strftime('%B %d, %Y at %I:%M %p UTC') }}</div>
+                </div>
+                <p class="small text-muted mt-3">
+                    This certificate confirms that occupational accident coverage is in effect for the worker listed
+                    above during the specified job. For claims, contact support@teens-at-work.com.
+                </p>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button onclick="window.print()" class="btn btn-outline-primary">&#128438; Print Certificate</button>
+            <a href="{{ url_for('session.view', job_id=job.id) }}" class="btn btn-outline-secondary">Back to Job</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

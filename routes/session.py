@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import db, Job, JobSession
 from routes import role_required
+from routes.insurance import issue_policy, close_policy
 
 session_bp = Blueprint('session', __name__)
 
@@ -82,7 +83,14 @@ def start_session(token):
     sess.status = 'in_progress'
     job.status = 'in_progress'
     db.session.commit()
-    flash('Work timer started! The teen can now begin.', 'success')
+
+    # Auto-issue insurance policy when work begins
+    try:
+        policy = issue_policy(sess)
+        flash(f'Work timer started! Insurance certificate #{policy.certificate_id} active.', 'success')
+    except Exception as e:
+        flash(f'Work timer started (warning: insurance issuance failed: {e}).', 'warning')
+
     return redirect(url_for('session.view', job_id=job.id))
 
 
@@ -107,6 +115,13 @@ def end_session(token):
     sess.status = 'completed'
     job.status = 'completed'
     db.session.commit()
+
+    # Close any active insurance policies for this session
+    from models import InsurancePolicy
+    active_policies = InsurancePolicy.query.filter_by(session_id=sess.id, status='active').all()
+    for policy in active_policies:
+        close_policy(policy, actual_end=sess.ended_at)
+
     flash(f'Job completed! Actual hours: {sess.actual_hours}, final amount: ${sess.final_amount}.', 'success')
     return redirect(url_for('session.view', job_id=job.id))
 
