@@ -47,6 +47,7 @@ def create_app():
     from routes.payment import payment_bp
     from routes.session import session_bp
     from routes.insurance import insurance_bp
+    from routes.background import background_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(homeowner_bp, url_prefix='/homeowner')
@@ -56,6 +57,7 @@ def create_app():
     app.register_blueprint(payment_bp, url_prefix='/payment')
     app.register_blueprint(session_bp, url_prefix='/session')
     app.register_blueprint(insurance_bp, url_prefix='/insurance')
+    app.register_blueprint(background_bp)
 
     register_socketio_events(socketio)
 

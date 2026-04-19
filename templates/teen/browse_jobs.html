@@ -43,7 +43,9 @@
                 {% if job.scheduled_start %}
                 <p class="mb-1 text-primary"><small>&#128197; {{ job.scheduled_start.strftime('%b %d at %I:%M %p') }}</small></p>
                 {% endif %}
-                <p class="text-muted mb-0"><small>Posted by {{ job.homeowner.full_name }} &middot; {{ job.created_at.strftime('%b %d, %Y') }}</small></p>
+                <p class="text-muted mb-0"><small>Posted by {{ job.homeowner.full_name }}
+                    {% if job.homeowner.background_check_status == 'clear' %}<span class="badge bg-success">Verified</span>{% endif %}
+                    &middot; {{ job.created_at.strftime('%b %d, %Y') }}</small></p>
             </div>
             <div class="card-footer bg-transparent">
                 <a href="{{ url_for('teen.job_detail', job_id=job.id) }}" class="btn btn-sm btn-primary">View Details</a>

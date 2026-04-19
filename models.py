@@ -27,6 +27,7 @@ class User(db.Model, UserMixin):
     google_id = db.Column(db.String(256), unique=True, nullable=True)
     is_approved = db.Column(db.Boolean, default=False)
     is_rejected = db.Column(db.Boolean, default=False)
+    background_check_status = db.Column(db.String(20), nullable=True)  # none, pending, clear, consider, suspended
     full_name = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(200), nullable=True)  # homeowners
@@ -39,6 +40,36 @@ class User(db.Model, UserMixin):
                            foreign_keys='Job.homeowner_id')
     interests = db.relationship('JobInterest', backref='teen', lazy=True,
                                 foreign_keys='JobInterest.teen_id')
+
+
+class BackgroundCheck(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Provider info
+    provider = db.Column(db.String(20), default='mock')  # 'mock' or 'checkr'
+    provider_candidate_id = db.Column(db.String(200), nullable=True)  # Checkr candidate ID
+    provider_report_id = db.Column(db.String(200), nullable=True)  # Checkr report ID
+    provider_invitation_id = db.Column(db.String(200), nullable=True)  # Checkr invitation ID
+
+    # What was checked
+    check_type = db.Column(db.String(50), default='criminal')  # criminal, identity, sex_offender
+    package = db.Column(db.String(50), default='tasker_standard')  # Checkr package name
+
+    # Results
+    status = db.Column(db.String(20), default='pending')  # pending, complete, error
+    result = db.Column(db.String(20), nullable=True)  # clear, consider, suspended
+    result_details = db.Column(db.Text, nullable=True)  # JSON of detailed findings
+
+    # Payment for the check
+    stripe_payment_intent_id = db.Column(db.String(200), nullable=True)
+    amount_paid = db.Column(db.Integer, default=0)  # cents
+
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship('User', backref='background_checks')
 
 
 class Job(db.Model):

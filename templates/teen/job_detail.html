@@ -44,7 +44,11 @@
                 {% endif %}
 
                 <p class="text-muted">
-                    Posted by <strong>{{ job.homeowner.full_name }}</strong> on {{ job.created_at.strftime('%B %d, %Y') }}
+                    Posted by <strong>{{ job.homeowner.full_name }}</strong>
+                    {% if job.homeowner.background_check_status == 'clear' %}
+                    <span class="badge bg-success">Verified</span>
+                    {% endif %}
+                    on {{ job.created_at.strftime('%B %d, %Y') }}
                 </p>
 
                 <hr>

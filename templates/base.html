@@ -31,6 +31,15 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('chat.conversations') }}">Messages</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('background.verify_page') }}">
+                                    {% if current_user.background_check_status == 'clear' %}
+                                    Verified &#9989;
+                                    {% else %}
+                                    Get Verified
+                                    {% endif %}
+                                </a>
+                            </li>
                         {% elif current_user.role == 'teen' %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('teen.dashboard') }}">Dashboard</a>
@@ -59,6 +68,9 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('insurance.admin_list') }}">Policies</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('background.admin_list') }}">BG Checks</a>
                             </li>
                         {% endif %}
                     {% endif %}
