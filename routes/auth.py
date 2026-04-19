@@ -29,7 +29,7 @@ def register():
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         role = request.form.get('role', '')
@@ -52,11 +52,11 @@ def register():
             flash('Invalid role selected.', 'danger')
             return render_template('auth/register.html')
 
-        if User.query.filter_by(username=username).first():
+        if User.query.filter(db.func.lower(User.username) == username.lower()).first():
             flash('Username already taken.', 'danger')
             return render_template('auth/register.html')
 
-        if User.query.filter_by(email=email).first():
+        if User.query.filter(db.func.lower(User.email) == email).first():
             flash('Email already registered.', 'danger')
             return render_template('auth/register.html')
 
