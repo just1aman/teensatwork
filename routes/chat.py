@@ -87,3 +87,58 @@ def conversation(conversation_id):
     messages = Message.query.filter_by(conversation_id=conversation_id).order_by(
         Message.created_at.asc()).all()
     return render_template('chat/conversation.html', conversation=conv, messages=messages)
+
+
+@chat_bp.route('/<int:conversation_id>/messages')
+@login_required
+def get_messages(conversation_id):
+    """AJAX polling endpoint — returns messages newer than `after` ID."""
+    conv = Conversation.query.get_or_404(conversation_id)
+    if current_user.id not in (conv.homeowner_id, conv.teen_id) and current_user.role != 'admin':
+        abort(403)
+
+    after_id = request.args.get('after', 0, type=int)
+    messages = Message.query.filter(
+        Message.conversation_id == conversation_id,
+        Message.id > after_id
+    ).order_by(Message.created_at.asc()).all()
+
+    return jsonify([{
+        'id': m.id,
+        'sender_id': m.sender_id,
+        'sender_name': m.sender.full_name,
+        'body': m.body,
+        'created_at': m.created_at.strftime('%I:%M %p'),
+        'is_mine': m.sender_id == current_user.id,
+    } for m in messages])
+
+
+@chat_bp.route('/<int:conversation_id>/send', methods=['POST'])
+@login_required
+def send_message(conversation_id):
+    """AJAX endpoint to send a message."""
+    conv = Conversation.query.get_or_404(conversation_id)
+    if current_user.id not in (conv.homeowner_id, conv.teen_id):
+        abort(403)
+
+    data = request.get_json(force=True)
+    body = data.get('body', '').strip()
+    if not body:
+        return jsonify({'error': 'empty message'}), 400
+
+    msg = Message(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        body=body,
+    )
+    db.session.add(msg)
+    db.session.commit()
+
+    return jsonify({
+        'id': msg.id,
+        'sender_id': msg.sender_id,
+        'sender_name': current_user.full_name,
+        'body': msg.body,
+        'created_at': msg.created_at.strftime('%I:%M %p'),
+        'is_mine': True,
+    })

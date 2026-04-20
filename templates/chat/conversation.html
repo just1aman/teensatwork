@@ -5,6 +5,7 @@
 <style>
     .chat-container { display: flex; flex-direction: column; }
     .chat-input-area { position: sticky; bottom: 0; background: white; padding-top: 1rem; }
+    #connection-status { font-size: 0.75rem; }
 </style>
 {% endblock %}
 
@@ -21,13 +22,14 @@
                 {{ conversation.homeowner.full_name }} &harr; {{ conversation.teen.full_name }}
             {% endif %}
         </small>
+        <span id="connection-status" class="ms-2 text-muted"></span>
     </div>
     <a href="{{ url_for('chat.conversations') }}" class="btn btn-outline-secondary btn-sm">Back</a>
 </div>
 
 <div class="chat-container" id="chatMessages">
     {% for msg in messages %}
-    <div class="d-flex {% if msg.sender_id == current_user.id %}justify-content-end{% endif %} mb-2">
+    <div class="d-flex {% if msg.sender_id == current_user.id %}justify-content-end{% endif %} mb-2" data-msg-id="{{ msg.id }}">
         <div class="message {% if msg.sender_id == current_user.id %}mine{% else %}theirs{% endif %}">
             <div class="sender-name">{{ msg.sender.full_name }}</div>
             {{ msg.body }}
@@ -49,35 +51,107 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
 <script>
     const conversationId = {{ conversation.id }};
     const currentUserId = {{ current_user.id }};
-    const socket = io();
+    let lastMessageId = 0;
+    let useWebSocket = false;
+    const POLL_INTERVAL = 3000;
 
-    socket.on('connect', function() {
-        socket.emit('join', {conversation_id: conversationId});
+    // Track the highest message ID already on the page
+    document.querySelectorAll('[data-msg-id]').forEach(function(el) {
+        const id = parseInt(el.getAttribute('data-msg-id'));
+        if (id > lastMessageId) lastMessageId = id;
     });
 
-    socket.on('new_message', function(msg) {
-        appendMessage(msg);
-    });
-
+    // --- AJAX Send (always works) ---
     function sendMessage() {
         const input = document.getElementById('messageInput');
         const body = input.value.trim();
         if (!body) return;
-        socket.emit('send_message', {
-            conversation_id: conversationId,
-            body: body
-        });
         input.value = '';
+
+        fetch('/chat/' + conversationId + '/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({body: body})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(msg) {
+            appendMessage(msg);
+            lastMessageId = msg.id;
+        })
+        .catch(function(err) {
+            console.error('Send failed:', err);
+        });
     }
 
+    // --- AJAX Poll for new messages ---
+    function pollMessages() {
+        if (useWebSocket) return; // skip polling if WebSocket is active
+        fetch('/chat/' + conversationId + '/messages?after=' + lastMessageId)
+            .then(function(r) { return r.json(); })
+            .then(function(messages) {
+                messages.forEach(function(msg) {
+                    if (!msg.is_mine) { // only append others' messages (ours already shown on send)
+                        appendMessage(msg);
+                    }
+                    if (msg.id > lastMessageId) lastMessageId = msg.id;
+                });
+            })
+            .catch(function(err) {
+                console.error('Poll failed:', err);
+            });
+    }
+
+    // Start polling
+    setInterval(pollMessages, POLL_INTERVAL);
+
+    // --- Try WebSocket upgrade (optional enhancement) ---
+    try {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js';
+        script.onload = function() {
+            try {
+                const socket = io({transports: ['websocket'], timeout: 5000, reconnectionAttempts: 3});
+                socket.on('connect', function() {
+                    useWebSocket = true;
+                    document.getElementById('connection-status').innerHTML = '';
+                    socket.emit('join', {conversation_id: conversationId});
+                });
+                socket.on('new_message', function(msg) {
+                    if (!msg.is_mine) {
+                        appendMessage(msg);
+                        if (msg.id > lastMessageId) lastMessageId = msg.id;
+                    }
+                });
+                socket.on('connect_error', function() {
+                    useWebSocket = false;
+                });
+                socket.on('disconnect', function() {
+                    useWebSocket = false;
+                });
+            } catch(e) {
+                // WebSocket not available, polling continues
+            }
+        };
+        script.onerror = function() {
+            // SocketIO lib failed to load, polling continues
+        };
+        document.head.appendChild(script);
+    } catch(e) {
+        // No WebSocket support, polling handles everything
+    }
+
+    // --- Shared rendering ---
     function appendMessage(msg) {
+        // Avoid duplicates
+        if (document.querySelector('[data-msg-id="' + msg.id + '"]')) return;
+
         const container = document.getElementById('chatMessages');
         const wrapper = document.createElement('div');
         wrapper.className = 'd-flex mb-2 ' + (msg.is_mine ? 'justify-content-end' : '');
+        wrapper.setAttribute('data-msg-id', msg.id);
         wrapper.innerHTML = '<div class="message ' + (msg.is_mine ? 'mine' : 'theirs') + '">' +
             '<div class="sender-name">' + escapeHtml(msg.sender_name) + '</div>' +
             escapeHtml(msg.body) +
