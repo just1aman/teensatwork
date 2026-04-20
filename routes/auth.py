@@ -6,6 +6,16 @@ from models import db, User
 auth_bp = Blueprint('auth', __name__)
 
 
+@auth_bp.route('/privacy')
+def privacy():
+    return render_template('legal/privacy.html')
+
+
+@auth_bp.route('/terms')
+def terms():
+    return render_template('legal/terms.html')
+
+
 @auth_bp.route('/')
 def index():
     if current_user.is_authenticated:

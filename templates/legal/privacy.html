@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy - TeensAtWork{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">Privacy Policy</h1>
+        <p class="text-muted">Last updated: April 19, 2026</p>
+
+        <h4>1. Introduction</h4>
+        <p>TeensAtWork ("we," "our," or "us") operates the website teens-at-work.com and the TeensAtWork mobile application. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</p>
+        <p>Our platform connects homeowners with teen workers (ages 13-19) for neighborhood chores and tasks. Because our platform serves minors, we take privacy and data protection especially seriously.</p>
+
+        <h4>2. Information We Collect</h4>
+        <h5>Account Information</h5>
+        <ul>
+            <li><strong>All Users:</strong> Full name, email address, username, phone number</li>
+            <li><strong>Homeowners:</strong> Home address, background check results</li>
+            <li><strong>Teens:</strong> Age, parent/guardian name, parent/guardian phone number</li>
+            <li><strong>Google OAuth Users:</strong> Google profile ID, name, and email (if you choose to sign in with Google)</li>
+        </ul>
+
+        <h5>Job & Transaction Information</h5>
+        <ul>
+            <li>Job postings (title, description, category, hourly rate, scheduled times)</li>
+            <li>Job interest/applications</li>
+            <li>Work session data (start time, end time, actual hours worked)</li>
+            <li>Payment information processed through Stripe (we do not store credit card numbers)</li>
+            <li>Insurance certificate records</li>
+        </ul>
+
+        <h5>Communications</h5>
+        <ul>
+            <li>Chat messages between homeowners and teens</li>
+            <li>These messages are accessible to platform administrators for safety monitoring</li>
+        </ul>
+
+        <h5>Technical Information</h5>
+        <ul>
+            <li>IP address, browser type, device information</li>
+            <li>Camera access (only when actively scanning QR codes for job check-in/check-out)</li>
+        </ul>
+
+        <h4>3. How We Use Your Information</h4>
+        <ul>
+            <li>To create and manage your account</li>
+            <li>To facilitate job posting, matching, and completion</li>
+            <li>To process payments through Stripe</li>
+            <li>To issue insurance certificates for job sessions</li>
+            <li>To verify homeowner backgrounds</li>
+            <li>To monitor platform safety (including chat review by administrators)</li>
+            <li>To communicate with you about your account and jobs</li>
+            <li>To comply with legal obligations</li>
+        </ul>
+
+        <h4>4. Children's Privacy (COPPA Compliance)</h4>
+        <p>Our platform allows users aged 13-19 to create accounts. For users under 18:</p>
+        <ul>
+            <li>We collect parent/guardian contact information during registration</li>
+            <li>Parent/guardian information is stored and accessible to administrators</li>
+            <li>We do not sell or share teen personal information with third-party advertisers</li>
+            <li>Parents/guardians may request deletion of their child's account by contacting us</li>
+            <li>We collect only the minimum information necessary for the platform to function</li>
+        </ul>
+
+        <h4>5. Information Sharing</h4>
+        <p>We share your information only in these circumstances:</p>
+        <ul>
+            <li><strong>Between matched users:</strong> When a homeowner accepts a teen for a job, limited contact information is shared to facilitate the work</li>
+            <li><strong>Payment processing:</strong> Transaction data is shared with Stripe to process payments</li>
+            <li><strong>Background checks:</strong> Homeowner information is shared with our background check provider to verify identity and criminal history</li>
+            <li><strong>Insurance:</strong> Job and worker details are shared with our insurance provider to issue coverage certificates</li>
+            <li><strong>Legal requirements:</strong> When required by law, subpoena, or to protect safety</li>
+        </ul>
+        <p>We do <strong>not</strong> sell your personal information to third parties.</p>
+
+        <h4>6. Data Security</h4>
+        <ul>
+            <li>Passwords are hashed using industry-standard algorithms (pbkdf2:sha256)</li>
+            <li>All data transmitted via HTTPS encryption</li>
+            <li>Payment data handled by Stripe (PCI DSS compliant) — we never see or store card numbers</li>
+            <li>Database access restricted to authorized administrators</li>
+        </ul>
+
+        <h4>7. Data Retention</h4>
+        <ul>
+            <li>Account data is retained as long as your account is active</li>
+            <li>Job and payment records are retained for 7 years for legal/tax compliance</li>
+            <li>Chat messages are retained for 2 years</li>
+            <li>You may request account deletion by contacting us</li>
+        </ul>
+
+        <h4>8. Your Rights</h4>
+        <p>You have the right to:</p>
+        <ul>
+            <li>Access your personal data</li>
+            <li>Correct inaccurate data</li>
+            <li>Request deletion of your account and data</li>
+            <li>Opt out of non-essential communications</li>
+            <li>For California residents: additional rights under CCPA</li>
+        </ul>
+
+        <h4>9. Third-Party Services</h4>
+        <p>Our platform integrates with:</p>
+        <ul>
+            <li><strong>Google OAuth:</strong> For sign-in (governed by Google's Privacy Policy)</li>
+            <li><strong>Stripe:</strong> For payment processing (governed by Stripe's Privacy Policy)</li>
+            <li><strong>Background check provider:</strong> For homeowner verification</li>
+        </ul>
+
+        <h4>10. Changes to This Policy</h4>
+        <p>We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.</p>
+
+        <h4>11. Contact Us</h4>
+        <p>If you have questions about this Privacy Policy or wish to exercise your rights, contact us at:</p>
+        <ul>
+            <li>Email: <strong>support@teens-at-work.com</strong></li>
+            <li>Website: <strong>https://www.teens-at-work.com</strong></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
