@@ -42,6 +42,17 @@
                     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
                         document.getElementById('google-signup-web').style.display = 'none';
                         document.getElementById('google-signup-native').style.display = 'block';
+
+                        try {
+                            const GoogleAuth = window.Capacitor.Plugins.GoogleAuth;
+                            GoogleAuth.initialize({
+                                clientId: '1013148014915-0m2h5kcmrlr41rl29b3q824l76mfe4f2.apps.googleusercontent.com',
+                                scopes: ['profile', 'email'],
+                                grantOfflineAccess: true,
+                            });
+                        } catch(e) {
+                            console.log('GoogleAuth init:', e);
+                        }
                     }
 
                     async function nativeGoogleSignUp() {

@@ -64,6 +64,18 @@
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
         document.getElementById('google-signin-web').style.display = 'none';
         document.getElementById('google-signin-native').style.display = 'block';
+
+        // Initialize the Google Auth plugin
+        try {
+            const GoogleAuth = window.Capacitor.Plugins.GoogleAuth;
+            GoogleAuth.initialize({
+                clientId: '1013148014915-0m2h5kcmrlr41rl29b3q824l76mfe4f2.apps.googleusercontent.com',
+                scopes: ['profile', 'email'],
+                grantOfflineAccess: true,
+            });
+        } catch(e) {
+            console.log('GoogleAuth init:', e);
+        }
     }
 
     async function nativeGoogleSignIn() {
@@ -72,7 +84,6 @@
         btn.innerHTML = 'Signing in...';
 
         try {
-            // Use the Capacitor Google Auth plugin
             const GoogleAuth = window.Capacitor.Plugins.GoogleAuth;
             if (!GoogleAuth) {
                 alert('Google Sign-In not available');
