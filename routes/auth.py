@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
+import os
+import requests as http_requests
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
@@ -225,6 +227,91 @@ def google_callback():
     elif user.role == 'admin':
         return redirect(url_for('admin.dashboard'))
     return redirect(url_for('auth.index'))
+
+
+@auth_bp.route('/login/google/native', methods=['POST'])
+def google_native_login():
+    """
+    Endpoint for native iOS Google Sign-In via Capacitor plugin.
+    Receives a Google ID token, verifies it, and logs the user in.
+    Returns JSON so the app JS can handle the redirect.
+    """
+    data = request.get_json(force=True)
+    id_token = data.get('idToken') or data.get('authentication', {}).get('idToken')
+    email = data.get('email')
+    full_name = data.get('name') or data.get('displayName')
+    google_id = data.get('id') or data.get('userId')
+
+    if not id_token:
+        return jsonify({'error': 'Missing ID token'}), 400
+
+    # Verify the token with Google
+    try:
+        resp = http_requests.get(
+            'https://oauth2.googleapis.com/tokeninfo',
+            params={'id_token': id_token},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return jsonify({'error': 'Invalid token'}), 401
+        token_data = resp.json()
+    except Exception as e:
+        return jsonify({'error': f'Token verification failed: {str(e)}'}), 401
+
+    # Verify the token audience matches our client IDs
+    valid_client_ids = [
+        os.environ.get('GOOGLE_CLIENT_ID', ''),
+        '1013148014915-0m2h5kcmrlr41rl29b3q824l76mfe4f2.apps.googleusercontent.com',
+    ]
+    if token_data.get('aud') not in valid_client_ids:
+        return jsonify({'error': 'Token audience mismatch'}), 401
+
+    google_id = token_data.get('sub') or google_id
+    email = token_data.get('email') or email
+    full_name = full_name or token_data.get('name', '')
+
+    if not google_id or not email:
+        return jsonify({'error': 'Missing user info from token'}), 400
+
+    # Find or create user (same logic as web callback)
+    user = User.query.filter_by(google_id=google_id).first()
+    if not user:
+        user = User.query.filter(db.func.lower(User.email) == email.lower()).first()
+        if user:
+            user.google_id = google_id
+            db.session.commit()
+        else:
+            user = User(
+                username=email.split('@')[0],
+                email=email.lower(),
+                full_name=full_name,
+                google_id=google_id,
+                role=None,
+            )
+            base_username = user.username
+            counter = 1
+            while User.query.filter_by(username=user.username).first():
+                user.username = f'{base_username}{counter}'
+                counter += 1
+            db.session.add(user)
+            db.session.commit()
+
+    if user.is_rejected:
+        return jsonify({'error': 'Account rejected', 'redirect': '/login'}), 403
+
+    login_user(user)
+
+    if not user.role:
+        return jsonify({'success': True, 'redirect': '/complete-profile'})
+    if not user.is_approved and user.role != 'admin':
+        return jsonify({'success': True, 'redirect': '/pending'})
+    if user.role == 'homeowner':
+        return jsonify({'success': True, 'redirect': '/homeowner/dashboard'})
+    elif user.role == 'teen':
+        return jsonify({'success': True, 'redirect': '/teen/dashboard'})
+    elif user.role == 'admin':
+        return jsonify({'success': True, 'redirect': '/admin/dashboard'})
+    return jsonify({'success': True, 'redirect': '/'})
 
 
 @auth_bp.route('/complete-profile', methods=['GET', 'POST'])
